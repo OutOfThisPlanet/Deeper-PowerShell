@@ -2,9 +2,9 @@ Function QueryDeeperDevice
 {
     param([string]$IPAddress)
 
-    # I have a stack exchange post currently up where I am looking to get this key automagically.
+    # I have a stack exchange post currently up where I am looking to get this automagically.
     # https://stackoverflow.com/questions/76146132/encrypting-and-encoding-a-password-string-with-a-public-key
-    $WorkingPasswordHash = "ADD KEY HERE"
+    $WorkingPasswordHash = "ADD Password Encoded String HERE"
 
     $Token = ((Invoke-WebRequest -UseBasicParsing -Uri "http://$($IPAddress)/api/admin/login" `
     -Method POST `
