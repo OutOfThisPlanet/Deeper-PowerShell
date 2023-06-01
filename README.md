@@ -1,6 +1,7 @@
 ![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/d4f51b04-5dee-4962-b1b6-ed6b884f5728)
 
 This script queries a Deeper Connet device, and some web apis to grab some details. 
+It also attempts to withdraw any NPOW rewards that have accrued. 
 
 REQUIRES A WORKING PASSWORD HASH!
 
