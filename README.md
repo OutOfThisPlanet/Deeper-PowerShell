@@ -10,7 +10,7 @@ You can get the working password hash from your browser developer tools.
 1) Open your dev tools in your browser
 2) Navigate to the "Network" tab
 3) Login to the deeper device
-4) In the login trace, find the entry with the "File" called "login"
+4) In the network trace, find the entry with the "File" called "login"
 5) In the developer tools "Network" tab's the right pane, copy the password hash
 6) Add the password hash to the script
 
