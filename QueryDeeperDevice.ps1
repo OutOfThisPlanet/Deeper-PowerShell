@@ -27,7 +27,7 @@ Function QueryDeeperDevice
     
     if ($DEPWorkProof.estimatedDprReward -gt 0)
     {
-        $DEPWithdraw = (Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/withdraw" -Headers @{"Authorization" = $Token} -Method POST | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select Success).Success
+        $NPOWWithdraw = (Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/withdraw" -Headers @{"Authorization" = $Token} -Method POST | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select Success).Success
     }
     elseif ($DEPWorkProof.estimatedDprReward -eq $null)
     {
