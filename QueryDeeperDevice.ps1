@@ -21,6 +21,20 @@ Function QueryDeeperDevice
     $Version = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/system-info/get-latestversion" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     $Transactions = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/betanet/getTransactionList" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty list
     $Keys = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/wallet/getKeyPair" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
+    $DEPWorkProof = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/workProof" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
+    
+    if ($DEPWorkProof.estimatedDprReward -gt 0)
+    {
+        $DEPWithdraw = (Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/withdraw" -Headers @{"Authorization" = $Token} -Method POST | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select Success).Success
+    }
+    elseif ($DEPWorkProof.estimatedDprReward -eq $null)
+    {
+        $NPOWWithdraw = "Unavailable"
+    }
+    else
+    {
+        $NPOWWithdraw = "Nothing to withdraw yet"
+    }
 
     Function Get-Deeper
     {
@@ -31,7 +45,7 @@ Function QueryDeeperDevice
         #Endpoints
         $StakedEndpoint = "https://staking.deeper.network/api/wallet/deeperChain/detail?deeperChain=$($WalletAddress)"
         $StatusEndpoint = "https://www.deeperscan.io/api/v1/deeper/staking_delegate_count?addr=$($WalletAddress)"
-    
+       
         #Staking Values
         $Values = Invoke-RestMethod -Uri $StakedEndpoint | 
             Select-Object bsc, bscv2, eth, credit
@@ -42,7 +56,7 @@ Function QueryDeeperDevice
         $StakedDPR = ($BSC + $DSC + $ETH)/[math]::Pow(10,18)
         
         $Type = Invoke-RestMethod -Uri $StatusEndpoint | 
-            Select-Object staking_status
+            Select-Object staking_status 
 
         #Object Creation
         $GetStaked = `
@@ -54,13 +68,100 @@ Function QueryDeeperDevice
         $Staked
     }
 
-    $Scrape = Get-Deeper -WalletAddress $Keys.publicKey
-    
+    try
+    {
+        $Scrape = Get-Deeper -WalletAddress $Keys.publicKey #-ErrorAction SilentlyContinue 
+        $Staked = $Scrape.Staked
+        $Type = $Scrape.Type
+    }
+    catch
+    {
+        $Staked = "Unavailable"
+        $Type = "Unavailable"
+    }
+
+    #Last Reward Date
+
+    $LastRewardDate = (Get-Date -ErrorAction SilentlyContinue ([System.DateTimeOffset]::FromUnixTimeMilliSeconds(($Transactions | 
+            Where-Object {$_.type -eq "staking.DelegatorReward"} | 
+            Select-Object -Last 1 | 
+            Select-Object timestamp).timestamp).DateTime).ToString("s")).DateTime
+
+    if ($LastRewardDate -like "*1970*" -or (!($LastRewardDate)))
+    {
+        $LastRewardDate = "Unavailable"
+    }
+
+    #Last Reward
+
+    $LastReward = ($Transactions | 
+                    Where-Object {$_.type -eq "staking.DelegatorReward"} | 
+                    Select-Object -Last 1 | 
+                    Select-Object amount).amount
+
+    if (!($LastReward))
+    {
+        $LastReward = "Unavailable"
+    }
+
+    #Last NPOW Reward
+
+    $LastNPOWReward = ($Transactions | 
+                    Where-Object {$_.type -eq "staking.NpowMint"} | 
+                    Select-Object -Last 1 | 
+                    Select-Object amount).amount
+
+    if (!($LastNPOWReward))
+    {
+        $LastNPOWReward = "Unavailable"
+    }
+
+    #Last NPOW Reward Date
+
+    $LastNPOWRewardDate = (Get-Date -ErrorAction SilentlyContinue ([System.DateTimeOffset]::FromUnixTimeMilliSeconds(($Transactions | 
+        Where-Object {$_.type -eq "staking.NpowMint"} | 
+        Select-Object -Last 1 | 
+        Select-Object timestamp).timestamp).DateTime).ToString("s")).DateTime
+
+    if ($LastNPOWRewardDate -like "*1970*" -or (!($LastNPOWRewardDate)))
+    {
+        $LastNPOWRewardDate = "Unavailable"
+    }
+
+    #NPOW Proof
+
+    $NPOWProof = $DEPWorkProof.workProof
+
+    if ($NPOWProof -eq $null)
+    {
+        $NPOWProof = "Unavailable"
+
+    }
+
+    #NPOW Reward
+
+    $NPOWReward = $DEPWorkProof.estimatedDprReward
+
+    if ($NPOWReward -eq $null)
+    {
+        $NPOWReward = "Unavailable"
+    }
+
+    #CPU
+
+    $CPUTemp = $Hardware.tempInCelsius
+    if (!($CPUTemp))
+    {
+        $CPUTemp = "Unavailable"
+    }
+
+
     $Collection =  @()
 
     #Object Creation
     $CreateObject = `
     [ordered]@{
+        "LocalIP" = $IPAddress
         "Address" = $Keys.publicKey
         "Balance" = $BalanceAndCredit.balance
         "Credit" = $BalanceAndCredit.credit
@@ -72,14 +173,20 @@ Function QueryDeeperDevice
         "DeviceID" = $Hardware.deviceId
         "CPUCount" = $Hardware.cpuCount
         "CPUModel" = $Hardware.totalMem
-        "CPUTemp" = $Hardware.tempInCelsius
+        "CPUTemp" = $CPUTemp
         "TotalMem" = $Hardware.totalMem
         "Latest" = $Version.latestVersion
         "Current" = $Version.currentVersion
-        "TotalStaked" = $Scrape.Staked
-        "StakingType" = $Scrape.Type
-        "LastReward" = ($Transactions | Where-Object {$_.type -eq "staking.DelegatorReward"} | Select-Object -Last 1 | Select-Object amount).amount
-        "LastRewardDate" = (Get-Date ([System.DateTimeOffset]::FromUnixTimeMilliSeconds(($Transactions | Where-Object {$_.type -eq "staking.DelegatorReward"} | Select-Object -Last 1 | Select-Object timestamp).timestamp).DateTime).ToString("s")).DateTime
+        "TotalStaked" = $Staked
+        "StakingType" = $Type
+        "WorkProof" = $NPOWProof
+        "RewardEstimate" = $NPOWReward
+        "LastNPOWReward" = $LastNPOWReward 
+        "LastNPOWRewardDate" = $LastNPOWRewardDate
+        "WithdrawNPOWReward" = $NPOWWithdraw
+        "LastReward" = $LastReward 
+        "LastRewardDate" = $LastRewardDate
+        "ThisSnapshotUTC" = (Get-Date).DateTime 
     }
     $Collection += $CreateObject
     $Collection
