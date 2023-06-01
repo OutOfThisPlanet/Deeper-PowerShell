@@ -72,7 +72,7 @@ Function QueryDeeperDevice
 
     try
     {
-        $Scrape = Get-Deeper -WalletAddress $Keys.publicKey #-ErrorAction SilentlyContinue 
+        $Scrape = Get-Deeper -WalletAddress $Keys.publicKey 
         $Staked = $Scrape.Staked
         $Type = $Scrape.Type
     }
@@ -84,7 +84,7 @@ Function QueryDeeperDevice
 
     #Last Reward Date
 
-    $LastRewardDate = (Get-Date -ErrorAction SilentlyContinue ([System.DateTimeOffset]::FromUnixTimeMilliSeconds(($Transactions | 
+    $LastRewardDate = (Get-Date ([System.DateTimeOffset]::FromUnixTimeMilliSeconds(($Transactions | 
             Where-Object {$_.type -eq "staking.DelegatorReward"} | 
             Select-Object -Last 1 | 
             Select-Object timestamp).timestamp).DateTime).ToString("s")).DateTime
@@ -120,7 +120,7 @@ Function QueryDeeperDevice
 
     #Last NPOW Reward Date
 
-    $LastNPOWRewardDate = (Get-Date -ErrorAction SilentlyContinue ([System.DateTimeOffset]::FromUnixTimeMilliSeconds(($Transactions | 
+    $LastNPOWRewardDate = (Get-Date ([System.DateTimeOffset]::FromUnixTimeMilliSeconds(($Transactions | 
         Where-Object {$_.type -eq "staking.NpowMint"} | 
         Select-Object -Last 1 | 
         Select-Object timestamp).timestamp).DateTime).ToString("s")).DateTime
