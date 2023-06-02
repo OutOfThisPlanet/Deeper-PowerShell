@@ -5,7 +5,7 @@ It also attempts to withdraw any NPOW rewards that have accrued.
 
 Usage: 
 
-QueryDeeperDevice -IPAddress '192.168.1.111' -WithdrawLimit 50 -Password 'password'
+`QueryDeeperDevice -IPAddress '192.168.1.111' -WithdrawLimit 50 -Password 'password'`
 
 If you are using PowerShell Core on Windows, Linux, or whatever, you only need to pass the admin password to login.
 
