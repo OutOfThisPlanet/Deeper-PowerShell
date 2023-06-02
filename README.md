@@ -8,7 +8,7 @@ Usage (PowerShell 7 and up):
 `QueryDeeperDevice -IPAddress '192.168.1.111' -WithdrawLimit 50 -Password 'password'`
 
 
-Usage (PowerShell 5)): 
+Usage (PowerShell 5): 
 
 `QueryDeeperDevice -IPAddress '192.168.1.111' -WithdrawLimit 50 # you need to add the password hash to the file`
 
