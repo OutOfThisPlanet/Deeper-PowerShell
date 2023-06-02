@@ -1,6 +1,6 @@
 Function QueryDeeperDevice
 {
-    param([string]$IPAddress, [int]$WithdrawLimit, [string]$Password = (Read-Host "Enter your password" -AsSecureString))
+    param([string]$IPAddress, [int]$WithdrawLimit, [string]$Password)
 
     $ErrorActionPreference = "SilentlyContinue"
 
@@ -11,6 +11,11 @@ Function QueryDeeperDevice
     }
     else
     {
+        if (!($Password))
+        {
+            $Password = (Read-Host "Enter your password" -AsSecureString)
+        }
+
         $publicKeyFile = ".\deeper.pem"
         $bytes = [System.Text.Encoding]::UTF8.GetBytes($Password)
         $rsa = New-Object System.Security.Cryptography.RSACryptoServiceProvider
