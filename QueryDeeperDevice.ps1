@@ -210,4 +210,4 @@ Function QueryDeeperDevice
     $Collection
 }
 
-QueryDeeperDevice -IPAddress $Device -WithdrawLimit 50 -Password 'password'
+QueryDeeperDevice -IPAddress "192.168.1.100" -WithdrawLimit 50 -Password 'password'
