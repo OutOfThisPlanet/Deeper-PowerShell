@@ -1,13 +1,14 @@
 Function QueryDeeperDevice
 {
-    param([string]$IPAddress, [int]$WithdrawLimit, [string]$Password)
+    param([string]$IPAddress, [int]$WithdrawLimit = 100, [string]$Password)
 
     $ErrorActionPreference = "SilentlyContinue"
 
     if ($PSVersionTable.PSVersion.Major -eq 5)
     {
         #If you're using Windows Powershell, you will have to manually add the Password Encoded String HERE
-        $encryptedPassword = "ADD Password Encoded String HERE"
+        #The encrypted password below is an example, as if your password were "password"
+        $encryptedPassword = "hQ3qipNI2qgdoq5pfxi5ezjG2WqXQxrVi0B4CUcAcTEsIYAZ3hpNHm2a28gHcMKH3UcLBDIrEIiU0R5udHxfLrAEW/UPmrC73NfRfEq8TUVDhFWNja4xuyrDFH2Cfyg2cpKKP5lYBZAjj6eU16K6d9DTzo++XMQ/1M0o+V78GkK7R4TPQiWpncGmCAEe3NIq5Indc8EbBvJLEk7YBAG1tBofFfwlpYMKawAWYVo2RfIEbUkUgDpIgS7u3k2YBlchFjaTeMs7/xnHJjkJD2+YMLp/uoPDgzjiijb+GQPnBzOmQNw5JKCxTmVv45iwvYcMV7aLXFGwvxOBrJsHr1U/FAMe8Eyh2k0j54GSlOk2IV7Y/1BJSPdN3A1/Wb/kkS0QW2ns+8PN2Q3QDTNDBvK1w0AGIs2RiT/4fS/VAdRxtdvXbhRl+MUKYnzmzJBJ75QDtqdpcxtHh7FlQFyfoEO+IyIeJhtIopOeAolHUMiUyQqFrDFelMh5Tj5PS2kTxMOO7B5xTvOMcfMxdQok5PUMcJ7X/AqQFYhXleTZev7otl943y2acZBY48VITi98t+aPLSttsDAhSfqvdgdwFt6UgokeCJhye/cd60MMyxcrtp6HnJyVhql1eXSaPXhIxm4Bgd4nf/wJXP4LPetlnzZCp0JCPVV7qA7NdIW8lRow0p8="
     }
     else
     {
