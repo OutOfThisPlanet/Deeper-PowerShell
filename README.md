@@ -1,9 +1,11 @@
 ![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/d4f51b04-5dee-4962-b1b6-ed6b884f5728)
 
 This script queries a Deeper Connect device, and some web apis to grab some details. 
-It also attempts to withdraw any NPOW rewards that have accrued past 100 DPR. 
+It also attempts to withdraw any NPOW rewards that have accrued.
 
-REQUIRES A WORKING PASSWORD HASH!
+If you are using PowerShell Core on Windows, Linux, or whatever, you only need to pass the admin password to login.
+
+If you are using Windows PowerShell (Version 5), this script requires a working password hash to login. 
 
 You can get the working password hash from your browser developer tools. 
 
@@ -16,3 +18,4 @@ You can get the working password hash from your browser developer tools.
 
 ![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/252afe6c-089f-4866-a01d-51f47185d849)
 This is the hash for "password". 
+
