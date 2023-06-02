@@ -3,9 +3,14 @@
 This script queries a Deeper Connect device, and some web apis to grab some details. 
 It also attempts to withdraw any NPOW rewards that have accrued.
 
-Usage: 
+Usage (PowerShell 7 and up): 
 
 `QueryDeeperDevice -IPAddress '192.168.1.111' -WithdrawLimit 50 -Password 'password'`
+
+
+Usage (PowerShell 5)): 
+
+`QueryDeeperDevice -IPAddress '192.168.1.111' -WithdrawLimit 50 # you need to add the password hash to the file`
 
 If you are using PowerShell Core (Version 7) on Windows, Linux, or whatever, you only need to pass the admin password to login.
 
