@@ -1,17 +1,28 @@
 Function QueryDeeperDevice
 {
-    param([string]$IPAddress)
-    
-    $ErrorActionPreference = "SilentlyContinue"
-    
-    # I have a stack exchange post currently up where I am looking to get this automagically.
-    # https://stackoverflow.com/questions/76146132/encrypting-and-encoding-a-password-string-with-a-public-key
-    $WorkingPasswordHash = "ADD Password Encoded String HERE"
+    param([string]$IPAddress, [int]$WithdrawLimit, [string]$Password = (Read-Host "Enter your password" -AsSecureString))
 
+    $ErrorActionPreference = "SilentlyContinue"
+
+    if ($PSVersionTable.PSVersion.Major -eq 5)
+    {
+        #If you're using Windows Powershell, you will have to manually add the Password Encoded String HERE
+        $encryptedPassword = "ADD Password Encoded String HERE"
+    }
+    else
+    {
+        $publicKeyFile = ".\deeper.pem"
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Password)
+        $rsa = New-Object System.Security.Cryptography.RSACryptoServiceProvider
+        $rsa.ImportFromPem([string](Get-Content $publicKeyFile))
+        $encryptedData = $rsa.Encrypt($bytes, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA1)
+        $encryptedPassword = [System.Convert]::ToBase64String($encryptedData)
+    }
+        
     $Token = ((Invoke-WebRequest -UseBasicParsing -Uri "http://$($IPAddress)/api/admin/login" `
     -Method POST `
     -ContentType "application/json" `
-    -Body "{`"username`":`"admin`",`"password`":`"$WorkingPasswordHash`"}"  |
+    -Body "{`"username`":`"admin`",`"password`":`"$encryptedPassword`"}"  |
         Select-Object -ExpandProperty Content) | ConvertFrom-Json | Select-Object token).token
 
     #Local Endpoints
@@ -25,7 +36,7 @@ Function QueryDeeperDevice
     $Keys = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/wallet/getKeyPair" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     $DEPWorkProof = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/workProof" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     
-    if ($DEPWorkProof.estimatedDprReward -gt 100)
+    if ($DEPWorkProof.estimatedDprReward -gt $WithdrawLimit)
     {
         $NPOWWithdraw = (Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/withdraw" -Headers @{"Authorization" = $Token} -Method POST | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select Success).Success
     }
@@ -35,7 +46,7 @@ Function QueryDeeperDevice
     }
     else
     {
-        $NPOWWithdraw = "Nothing to withdraw yet"
+        $NPOWWithdraw = "Withdrawing after DPR amount reaches $WithdrawLimit"
     }
 
     Function Get-Deeper
@@ -72,7 +83,7 @@ Function QueryDeeperDevice
 
     try
     {
-        $Scrape = Get-Deeper -WalletAddress $Keys.publicKey 
+        $Scrape = Get-Deeper -WalletAddress $Keys.publicKey
         $Staked = $Scrape.Staked
         $Type = $Scrape.Type
     }
@@ -194,5 +205,4 @@ Function QueryDeeperDevice
     $Collection
 }
 
-QueryDeeperDevice -IPAddress "192.168.1.100" 
-
+QueryDeeperDevice -IPAddress $Device -WithdrawLimit 50 -Password 'password'
