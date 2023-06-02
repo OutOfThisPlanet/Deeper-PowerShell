@@ -1,7 +1,7 @@
 ![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/d4f51b04-5dee-4962-b1b6-ed6b884f5728)
 
 This script queries a Deeper Connect device, and some web apis to grab some details. 
-It also attempts to withdraw any NPOW rewards that have accrued.
+It also attempts to withdraw any NPOW rewards that have accrued (The WithdrawLimit flag will allow you to choose the threshold to attempt to withdraw, otherwise the default is 100 DPR).
 
 Usage (PowerShell 7 and up): 
 
