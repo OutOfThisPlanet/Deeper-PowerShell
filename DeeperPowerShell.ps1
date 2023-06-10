@@ -51,8 +51,7 @@ Function Get-LoginToken
 
 #Session Variables
 $IPAddress = "192.168.22.199"
-$LoginPassword = Get-LoginPassword
-$Token = Get-LoginToken -IPAddress $IPAddress -EncryptedLoginPassword $LoginPassword
+$Token = Get-LoginToken -IPAddress $IPAddress -EncryptedLoginPassword (Get-LoginPassword)
 
 Function Send-DPR
 {
@@ -70,8 +69,7 @@ Function Send-DPR
 #Sending
 $Recipient = "5C5kUhQsECAcr7VovYBn6kEUe87JmdXDX4uwu2XyNomPtAyU" #ensure to change this with your own address, otherwise thank you :)
 $DPRAmount = 100
-$WalletPassword = Get-WalletPassword
-Send-DPR -IPAddress $IPAddress -Recepient $Recipient -DPRAmount $DPRAmount -Token $Token -EncryptedWalletPassword $WalletPassword
+Send-DPR -IPAddress $IPAddress -Recepient $Recipient -DPRAmount $DPRAmount -Token $Token -EncryptedWalletPassword (Get-WalletPassword)
 
 Function Get-Values
 {
