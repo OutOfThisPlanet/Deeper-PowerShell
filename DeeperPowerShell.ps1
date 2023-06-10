@@ -1,40 +1,86 @@
-Function QueryDeeperDevice
+Function EncryptString 
 {
-    param([string]$IPAddress, [int]$WithdrawLimit = 100, [string]$Password)
-
-    $ErrorActionPreference = "SilentlyContinue"
-
-    if ($PSVersionTable.PSVersion.Major -eq 5)
+    param([string]$String)
+    
+    if (($PSVersionTable.PSVersion).Major -le 6)
     {
-        #If you're using Windows Powershell, you will have to manually add the Password Encoded String HERE
-        #The encrypted password below is an example, as if your password were "password"
-        $encryptedPassword = "hQ3qipNI2qgdoq5pfxi5ezjG2WqXQxrVi0B4CUcAcTEsIYAZ3hpNHm2a28gHcMKH3UcLBDIrEIiU0R5udHxfLrAEW/UPmrC73NfRfEq8TUVDhFWNja4xuyrDFH2Cfyg2cpKKP5lYBZAjj6eU16K6d9DTzo++XMQ/1M0o+V78GkK7R4TPQiWpncGmCAEe3NIq5Indc8EbBvJLEk7YBAG1tBofFfwlpYMKawAWYVo2RfIEbUkUgDpIgS7u3k2YBlchFjaTeMs7/xnHJjkJD2+YMLp/uoPDgzjiijb+GQPnBzOmQNw5JKCxTmVv45iwvYcMV7aLXFGwvxOBrJsHr1U/FAMe8Eyh2k0j54GSlOk2IV7Y/1BJSPdN3A1/Wb/kkS0QW2ns+8PN2Q3QDTNDBvK1w0AGIs2RiT/4fS/VAdRxtdvXbhRl+MUKYnzmzJBJ75QDtqdpcxtHh7FlQFyfoEO+IyIeJhtIopOeAolHUMiUyQqFrDFelMh5Tj5PS2kTxMOO7B5xTvOMcfMxdQok5PUMcJ7X/AqQFYhXleTZev7otl943y2acZBY48VITi98t+aPLSttsDAhSfqvdgdwFt6UgokeCJhye/cd60MMyxcrtp6HnJyVhql1eXSaPXhIxm4Bgd4nf/wJXP4LPetlnzZCp0JCPVV7qA7NdIW8lRow0p8="
+        Write-Host "This will only work on PowerShell 7." -ForegroundColor Red
+        break
     }
     else
     {
-        if (!($Password))
-        {
-            $Password = (Read-Host "Enter your password" -AsSecureString)
-        }
-
-        $publicKeyFile = ".\deeper.pem"
-        $bytes = [System.Text.Encoding]::UTF8.GetBytes($Password)
+        $publicKeyFile = "deeper.pem"
+        $bytes = [System.Text.Encoding]::UTF8.GetBytes($String)
         $rsa = New-Object System.Security.Cryptography.RSACryptoServiceProvider
         $rsa.ImportFromPem([string](Get-Content $publicKeyFile))
         $encryptedData = $rsa.Encrypt($bytes, [System.Security.Cryptography.RSAEncryptionPadding]::OaepSHA1)
         $encryptedPassword = [System.Convert]::ToBase64String($encryptedData)
+        $encryptedPassword
     }
-        
-    $Token = ((Invoke-WebRequest -UseBasicParsing -Uri "http://$($IPAddress)/api/admin/login" `
-    -Method POST `
-    -ContentType "application/json" `
-    -Body "{`"username`":`"admin`",`"password`":`"$encryptedPassword`"}"  |
-        Select-Object -ExpandProperty Content) | ConvertFrom-Json | Select-Object token).token
+}
 
-    #Local Endpoints
+Function Get-LoginPassword
+{
+    param([string]$LoginPassword)
+    if (!($LoginPassword))
+    {
+        $PlaintextPassword = Read-Host "Please enter your Deeper login Password" -AsSecureString | ConvertFrom-SecureString -AsPlaintext
+    }
+    EncryptString -String $PlaintextPassword
+}
+
+Function Get-WalletPassword
+{
+    param([string]$WalletPassword)
+    if (!($WalletPassword))
+    {
+        $PlaintextPassword = Read-Host "Please enter your Deeper wallet Password" -AsSecureString | ConvertFrom-SecureString -AsPlaintext
+    }
+    EncryptString -String $PlaintextPassword
+}
+
+Function Get-LoginToken
+{
+    param([string]$IPAddress, [string]$EncryptedLoginPassword)
+    ((Invoke-WebRequest -UseBasicParsing -Uri "http://$($IPAddress)/api/admin/login" `
+        -Method POST `
+        -ContentType "application/json" `
+        -Body "{`"username`":`"admin`",`"password`":`"$EncryptedLoginPassword`"}"  |
+            Select-Object -ExpandProperty Content) | ConvertFrom-Json | Select-Object token).token
+}
+
+#Session Variables
+$IPAddress = "192.168.22.199"
+$LoginPassword = Get-LoginPassword
+$Token = Get-LoginToken -IPAddress $IPAddress -EncryptedLoginPassword $LoginPassword
+
+Function Send-DPR
+{
+    param([string]$IPAddress, [string]$Recepient, [string]$EncryptedWalletPassword, [int]$DPRAmount, $Token)
+    Write-Host "Sending $DPRAmount DPR to $Recepient" -ForegroundColor Green
+
+    (Invoke-WebRequest -UseBasicParsing -Uri "http://$IPAddress/api/betanet/transfer" `
+        -Method POST `
+        -Headers @{"Authorization" = $Token} `
+        -ContentType "application/json" `
+        -Body "{`"recipient`":`"$Recipient`",`"amount`":$DPRAmount,`"password`":`"$EncryptedWalletPassword`"}"  |
+            Select-Object -ExpandProperty Content) | ConvertFrom-Json
+}
+
+#Sending
+$Recipient = "5C5kUhQsECAcr7VovYBn6kEUe87JmdXDX4uwu2XyNomPtAyU"
+$DPRAmount = 10
+$WalletPassword = Get-WalletPassword
+#Send-DPR -IPAddress $IPAddress -Recepient $Recipient -DPRAmount $DPRAmount -Token $Token -EncryptedWalletPassword $WalletPassword
+
+Function Get-Values
+{
+    param ([string]$IPAddress, $Token)
     $URI = "http://$($IPAddress)/api"
+    $Uptime = (Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/info" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json)[0]
     $BalanceAndCredit = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/betanet/getBalanceAndCredit" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     $Traffic = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/microPayment/getDailyTraffic" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
+    $Network = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/system-info/network-address" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     $Channel = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/betanet/getChannelBalance" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     $Hardware = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/system-info/hardware-info" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     $Version = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/system-info/get-latestversion" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
@@ -42,18 +88,7 @@ Function QueryDeeperDevice
     $Keys = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/wallet/getKeyPair" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     $DEPWorkProof = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/workProof" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     
-    if ($DEPWorkProof.estimatedDprReward -gt $WithdrawLimit)
-    {
-        $NPOWWithdraw = (Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/withdraw" -Headers @{"Authorization" = $Token} -Method POST | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select Success).Success
-    }
-    elseif ($DEPWorkProof.estimatedDprReward -eq $null)
-    {
-        $NPOWWithdraw = "Unavailable"
-    }
-    else
-    {
-        $NPOWWithdraw = "Withdrawing after DPR amount reaches $WithdrawLimit"
-    }
+    $Now = (Get-Date).ToUniversalTime()
 
     Function Get-Deeper
     {
@@ -100,7 +135,6 @@ Function QueryDeeperDevice
     }
 
     #Last Reward Date
-
     $LastRewardDate = (Get-Date ([System.DateTimeOffset]::FromUnixTimeMilliSeconds(($Transactions | 
             Where-Object {$_.type -eq "staking.DelegatorReward"} | 
             Select-Object -Last 1 | 
@@ -112,7 +146,6 @@ Function QueryDeeperDevice
     }
 
     #Last Reward
-
     $LastReward = ($Transactions | 
                     Where-Object {$_.type -eq "staking.DelegatorReward"} | 
                     Select-Object -Last 1 | 
@@ -124,7 +157,6 @@ Function QueryDeeperDevice
     }
 
     #Last NPOW Reward
-
     $LastNPOWReward = ($Transactions | 
                     Where-Object {$_.type -eq "staking.NpowMint"} | 
                     Select-Object -Last 1 | 
@@ -136,7 +168,6 @@ Function QueryDeeperDevice
     }
 
     #Last NPOW Reward Date
-
     $LastNPOWRewardDate = (Get-Date ([System.DateTimeOffset]::FromUnixTimeMilliSeconds(($Transactions | 
         Where-Object {$_.type -eq "staking.NpowMint"} | 
         Select-Object -Last 1 | 
@@ -148,7 +179,6 @@ Function QueryDeeperDevice
     }
 
     #NPOW Proof
-
     $NPOWProof = $DEPWorkProof.workProof
 
     if ($NPOWProof -eq $null)
@@ -158,7 +188,6 @@ Function QueryDeeperDevice
     }
 
     #NPOW Reward
-
     $NPOWReward = $DEPWorkProof.estimatedDprReward
 
     if ($NPOWReward -eq $null)
@@ -167,20 +196,20 @@ Function QueryDeeperDevice
     }
 
     #CPU
-
     $CPUTemp = $Hardware.tempInCelsius
     if (!($CPUTemp))
     {
         $CPUTemp = "Unavailable"
     }
 
-
+    #Output
     $Collection =  @()
 
     #Object Creation
     $CreateObject = `
     [ordered]@{
         "LocalIP" = $IPAddress
+        "PublicIP" = $Network.pubIp
         "Address" = $Keys.publicKey
         "Balance" = $BalanceAndCredit.balance
         "Credit" = $BalanceAndCredit.credit
@@ -202,13 +231,34 @@ Function QueryDeeperDevice
         "RewardEstimate" = $NPOWReward
         "LastNPOWReward" = $LastNPOWReward 
         "LastNPOWRewardDate" = $LastNPOWRewardDate
-        "WithdrawNPOWReward" = $NPOWWithdraw
         "LastReward" = $LastReward 
         "LastRewardDate" = $LastRewardDate
-        "ThisSnapshotUTC" = (Get-Date).DateTime 
+        "ThisSnapshotUTC" = $Now.DateTime
+        "Uptime" = $Uptime
     }
     $Collection += $CreateObject
     $Collection
 }
 
-QueryDeeperDevice -IPAddress "192.168.1.100" -WithdrawLimit 50 -Password 'password'
+#Get-Values -IPAddress $IPAddress -Token $Token
+
+Function Withdraw-NPOW
+{
+    param([string]$IPAddress, $Token)
+    $URI = "http://$($IPAddress)/api"
+    (Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/withdraw" -Headers @{"Authorization" = $Token} -Method POST | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select Success).Success
+}
+
+#Withdraw-NPOW -IPAddress $IPAddress -Token $Token
+
+Function Reboot-Device
+{
+    param([string]$IPAddress, $Token)
+    $URI = "http://$($IPAddress)/api"
+    Write-Host "Rebooting Device" -ForegroundColor Red
+    Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/admin/reboot" -Headers @{"Authorization" = $Token} -Method POST | Out-Null
+}
+
+#Reboot-Device -IPAddress $IPAddress -Token $Token
+
+
