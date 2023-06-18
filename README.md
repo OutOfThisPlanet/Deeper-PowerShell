@@ -2,7 +2,7 @@ This script contains some PowerShell functions to query and interact with a Deep
 
 Requires PowerShell 7! This will not work on Windows PowerShell (5), and I haven't tested PowerShell 6. 
 
-`Get-EncryptedString` encrypts a string using the deeper.pem public key. This is used to encrypt the login password and the wallet password.  
+`Get-EncryptedString` encrypts a string using the deeper.pem public key (public key has changed in the new release). This is used to encrypt the login password and the wallet password.  
 
 `Get-LoginPassword` asks for the login password, and sends it to get encrypted
 
