@@ -9,7 +9,7 @@ Function EncryptString
     }
     else
     {
-        $publicKeyFile = ".\deeper.pem"
+        $publicKeyFile = ".\deeper-old.pem"
         $bytes = [System.Text.Encoding]::UTF8.GetBytes($String)
         $rsa = New-Object System.Security.Cryptography.RSACryptoServiceProvider
         $rsa.ImportFromPem([string](Get-Content $publicKeyFile))
