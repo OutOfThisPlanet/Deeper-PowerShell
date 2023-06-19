@@ -1,6 +1,6 @@
 Function EncryptString 
 {
-    param([string]$String)
+    param([string]$String, [string]$publicKeyFile)
     
     if (($PSVersionTable.PSVersion).Major -le 6)
     {
@@ -9,7 +9,6 @@ Function EncryptString
     }
     else
     {
-        $publicKeyFile = ".\deeper-old.pem"
         $bytes = [System.Text.Encoding]::UTF8.GetBytes($String)
         $rsa = New-Object System.Security.Cryptography.RSACryptoServiceProvider
         $rsa.ImportFromPem([string](Get-Content $publicKeyFile))
@@ -26,7 +25,7 @@ Function Get-LoginPassword
     {
         $PlaintextPassword = Read-Host "Please enter your Deeper login Password" -AsSecureString | ConvertFrom-SecureString -AsPlaintext
     }
-    EncryptString -String $PlaintextPassword
+    EncryptString -String $PlaintextPassword -publicKeyFile "deeper-old.pem"
 }
 
 Function Get-WalletPassword
@@ -36,7 +35,7 @@ Function Get-WalletPassword
     {
         $PlaintextPassword = Read-Host "Please enter your Deeper wallet Password" -AsSecureString | ConvertFrom-SecureString -AsPlaintext
     }
-    EncryptString -String $PlaintextPassword
+    EncryptString -String $PlaintextPassword -publicKeyFile "deeper-old.pem"
 }
 
 Function Get-LoginToken
