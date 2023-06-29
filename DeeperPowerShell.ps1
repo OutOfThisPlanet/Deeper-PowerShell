@@ -39,7 +39,7 @@ Function Deeper-Session
         }
     }
 
-    Function Get-LoginToken #IPAddress EncryptedLoginPassword (String that has been through the above 2 functions)
+    Function Get-LoginToken
     {
         param([string]$IPAddress, [string]$EncryptedLoginPassword)
         ((Invoke-WebRequest -UseBasicParsing -Uri "http://$($IPAddress)/api/admin/login" `
@@ -83,7 +83,7 @@ Function Send-DPR
             }
         }
 
-        Function Get-WalletPassword #password 
+        Function Get-WalletPassword 
         {
             param([string]$WalletPassword)
 
