@@ -15,4 +15,4 @@ The values from the powershell script can be exported to JSON, and consumed by H
 ![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/93fdbc12-fae5-428c-a6e9-a5890e61f209)
 
 For fun, I calculated how much DPR would need to cost per token for you to be a millionaire (based from your staked amount).
-I also calculated how many many DPR tokens at today's price for you to have a million dollars. 
+I also calculated how many many DPR tokens you need at today's price for you to have a million dollars. 
