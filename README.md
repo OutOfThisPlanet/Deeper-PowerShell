@@ -12,7 +12,7 @@ After loading the functions, you can use them as shown in the picture below.
 
 The values from the powershell script can be exported to JSON, and consumed by HomeAssistant.
 
-![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/93fdbc12-fae5-428c-a6e9-a5890e61f209)
+![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/54b4900a-f3df-4070-8da8-d2dca5fa6363)
 
 For fun, I calculated how much DPR would need to cost per token for you to be a millionaire (based from your staked amount).
 I also calculated how many many DPR tokens you need at today's price for you to be a millionaire.
