@@ -10,6 +10,9 @@ After loading the functions, you can use them as shown in the picture below.
 
 ![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/2177feaa-d007-4cf5-bca9-f95b7f3e3727)
 
+If you do not supply a password when you run the "Deeper-Session" function, you will be asked to type it in. 
+Same goes for when you run the "Send-DPR" function. 
+
 ![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/78d5bafa-654e-47c5-a640-7fb8f9e3bced)
 
 The values from the powershell script can be exported to JSON, and consumed by HomeAssistant (out of scope for this repo, but worth mentioning).
