@@ -2,7 +2,7 @@ This script contains some PowerShell functions to query and interact with a Deep
 
 It also gathers some info from online resources. 
 
-NOTE: Deeper Network have changed their public key and private keys (which is good, and I applaud them for doing so). 
+NOTE: Deeper Network have changed their public and private keys (which is good, and I applaud them for doing so). 
 
 Requires PowerShell 7! This will not work on Windows PowerShell (5), and I haven't tested PowerShell 6. 
 
