@@ -21,5 +21,13 @@ For fun, I calculated how much DPR would need to cost per token for you to be a 
 
 I also calculated how many many DPR tokens you need at today's price for you to be a millionaire.
 
-![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/54b4900a-f3df-4070-8da8-d2dca5fa6363)
+![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/06b713c0-8cdb-4e63-a1c0-12a1ccbdb22a)
+
+I like Home Assistant :)
+
+![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/36ff3fe0-8257-42db-a8e0-3bda4f0efeae)
+![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/0b9994b7-855e-4ef2-a9db-cf854e223439)
+![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/d272c585-f6fd-4717-af91-84e57bb593c9)
+![image](https://github.com/OutOfThisPlanet/Deeper-PowerShell/assets/42836083/d93e51ef-5cdc-4ab3-8a12-fede68414267)
+
 
