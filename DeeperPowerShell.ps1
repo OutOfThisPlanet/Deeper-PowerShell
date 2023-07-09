@@ -39,7 +39,7 @@ Function Deeper-Session
         }
     }
 
-    Function Get-LoginToken
+    Function Get-LoginToken #IPAddress EncryptedLoginPassword (String that has been through the above 2 functions)
     {
         param([string]$IPAddress, [string]$EncryptedLoginPassword)
         ((Invoke-WebRequest -UseBasicParsing -Uri "http://$($IPAddress)/api/admin/login" `
@@ -58,11 +58,11 @@ Function Send-DPR
 {
     param([string]$IPAddress, [string]$Recepient, [int]$DPRAmount, $Token, [string]$WalletPassword)
         
-    Function Deeper-Wallet #password
+    Function Deeper-Wallet
     {
         param([string]$WalletPassword)
 
-        Function Get-EncryptedString #inputstring 
+        Function Get-EncryptedString 
         {
             param([string]$String)
     
@@ -83,7 +83,7 @@ Function Send-DPR
             }
         }
 
-        Function Get-WalletPassword 
+        Function Get-WalletPassword
         {
             param([string]$WalletPassword)
 
@@ -101,10 +101,10 @@ Function Send-DPR
         $EncryptedPassword = Get-WalletPassword -WalletPassword $WalletPassword
         $EncryptedPassword
     }     
-    
-    Write-Host "Sending $DPRAmount DPR to $Recepient" -ForegroundColor Green
 
     $EncryptedWalletPassword = Deeper-Wallet -IPAddress $IPAddress -WalletPassword $WalletPassword
+    
+    Write-Host "Sending $DPRAmount DPR to $Recepient" -ForegroundColor Yellow
 
     (Invoke-WebRequest -UseBasicParsing -Uri "http://$IPAddress/api/betanet/transfer" `
         -Method POST `
@@ -127,10 +127,23 @@ Function Get-Values
     $Version = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/system-info/get-latestversion" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     $Transactions = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/betanet/getTransactionList" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty list
     $Keys = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/wallet/getKeyPair" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
-    $DEPWorkProof = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/workProof" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json
     $DPRPrice = ((Invoke-WebRequest -UseBasicParsing -Uri "https://www.kucoin.com/_api/currency/v2/prices?base=USD&lang=en_US&targets=" | Select-Object Content).content | ConvertFrom-Json | Select-Object -ExpandProperty data | Select-Object DPR).DPR
+    $SharingEnabled = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/sharing/getSharingConfig" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty SharingEnabled 
+    $WorkingMode = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/wifi/workingInfo" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty workingInfo | Select-Object -ExpandProperty mode
+    $LocalTraffic = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/traffic/total-traffic" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty localTraffic
+    $ClientTraffic = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/traffic/total-traffic" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty clientTraffic
+    $ServerTraffic = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/traffic/total-traffic" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty serverTraffic
 
-    $Now = (Get-Date).ToUniversalTime()
+    $Now = (Get-Date).ToUniversalTime() | Get-Date -Format "dd/MM/yyyy hh:mm:ss"
+
+    if ($Version.currentVersion -like "*dep*")
+    {
+        $DEPWorkProof = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/workProof" -Headers @{"Authorization" = $Token} -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Content | ConvertFrom-Json
+    }
+    else
+    {
+        $DEPWorkProof = $Null
+    }
 
     Function Get-Deeper
     {
@@ -241,6 +254,8 @@ Function Get-Values
         $CPUTemp = "Unavailable"
     }
 
+    $BytesRemaining = ($($Traffic.shared) - 10000000)
+
     #Output
     $Collection =  @()
 
@@ -250,15 +265,25 @@ Function Get-Values
         "LocalIP" = $IPAddress
         "PublicIP" = $Network.pubIp
         "Address" = $Keys.publicKey
+        "TokenTracking" = $Token.substring($Token.length - 9, 9)
         "Balance" = $BalanceAndCredit.balance
         "Credit" = $BalanceAndCredit.credit
         "CampaignID" = $BalanceAndCredit.campaignId
+        "SharingEnabled" = $SharingEnabled
+        "BytesRemaining" = $BytesRemaining
         "Shared" = $Traffic.shared
         "Consumed" = $Traffic.consumed
+        "LocalTrafficUpload" = $LocalTraffic.Upload
+        "LocalTrafficDownload" = $LocalTraffic.Download
+        "ClientTrafficUpload" = $ClientTraffic.Upload
+        "ClientTrafficDownload" = $ClientTraffic.Download
+        "ServerTrafficUpload" = $ServerTraffic.Upload
+        "ServerTrafficDownload" = $ServerTraffic.Download
+        "WorkingMode" = $WorkingMode
         "SN" = $Hardware.SN
         "DeviceID" = $Hardware.deviceId
         "CPUCount" = $Hardware.cpuCount
-        "CPUModel" = $Hardware.totalMem
+        #"CPUModel" = $Hardware.cpuModel
         "CPUTemp" = $CPUTemp
         "TotalMem" = $Hardware.totalMem
         "Latest" = $Version.latestVersion
@@ -270,11 +295,14 @@ Function Get-Values
         "LastNPOWRewardDate" = $LastNPOWRewardDate
         "LastReward" = $LastReward 
         "LastRewardDate" = $LastRewardDate
-        "ThisSnapshotUTC" = $Now.DateTime
-        "Uptime" = $Uptime
-        "DPRPriceUSD" = $DPRPrice
+        "DPRPriceUSD" = [float]$DPRPrice
         "StakeValueUSD" = ($Staked * $DPRPrice)
         "DPRMillionaire" = (1000000 / $DPRPrice)
+        "ThisSnapshotUTC" = $Now
+        "Uptime" = $Uptime
+        "UptimeDays" = [int]($Uptime.Split("d")[0])
+        "UptimeHours" = [int](($Uptime).Split("d")[1].Split("h")[0])
+        "UptimeMinutes" = [int](($Uptime).Split("d")[1].Split("h")[1].Split("m")[0])
     }
     $Collection += $CreateObject
     $Collection
@@ -284,15 +312,32 @@ Function Withdraw-NPOW
 {
     param([string]$IPAddress, $Token)
     $URI = "http://$($IPAddress)/api"
-    (Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/withdraw" -Headers @{"Authorization" = $Token} -Method POST | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select Success).Success
+    Write-Host "Attempting to Withdraw NPOW Reward" -ForegroundColor Yellow
+    Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/dep/withdraw" -Headers @{"Authorization" = $Token} -Method POST -ErrorAction Stop | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object Success
 }
 
 Function Reboot-Device
 {
-    param([string]$IPAddress, $Token)
+    param([string]$IPAddress, $Token, [int]$Timeout)
     $URI = "http://$($IPAddress)/api"
-    Write-Host "Rebooting Device" -ForegroundColor Red
-    Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/admin/reboot" -Headers @{"Authorization" = $Token} -Method POST | Out-Null
+    Write-Host "Rebooting Device" -ForegroundColor Yellow
+    Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/admin/reboot" -Headers @{"Authorization" = $Token} -Method POST -TimeoutSec $Timeout | Out-Null
+}
+
+Function Turn-SharingOn
+{
+    param ([string]$IPAddress, $Token)
+    $URI = "http://$($IPAddress)/api"
+    Write-Host "Turning Sharing On" -ForegroundColor Yellow
+    Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/sharing/setSharingState"  -ContentType "application/json" -Headers @{"Authorization" = $Token} -Method POST -Body "{`"sharingEnabled`":true}" | Select-Object -ExpandProperty Content | ConvertFrom-Json 
+}
+
+Function Turn-SharingOff
+{
+    param ([string]$IPAddress, $Token)
+    $URI = "http://$($IPAddress)/api"
+    Write-Host "Turning Sharing Off" -ForegroundColor Yellow
+    Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/sharing/setSharingState"  -ContentType "application/json" -Headers @{"Authorization" = $Token} -Method POST -Body "{`"sharingEnabled`":false}" | Select-Object -ExpandProperty Content | ConvertFrom-Json 
 }
 
 $IPAddress = "192.168.22.199"
@@ -310,3 +355,8 @@ Withdraw-NPOW -IPAddress $IPAddress -Token $Token
 #Reboot Device
 Reboot-Device -IPAddress $IPAddress -Token $Token
 
+#Turn Sharing On
+Turn-SharingOn -IPAddress $IPAddress -Token $Token
+
+#Turn Sharing Off
+Turn-SharingOff -IPAddress $IPAddress -Token $Token
