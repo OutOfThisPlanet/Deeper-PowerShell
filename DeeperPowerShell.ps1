@@ -134,7 +134,7 @@ Function Get-Values
     $ClientTraffic = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/traffic/total-traffic" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty clientTraffic
     $ServerTraffic = Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/traffic/total-traffic" -Headers @{"Authorization" = $Token} | Select-Object -ExpandProperty Content | ConvertFrom-Json | Select-Object -ExpandProperty serverTraffic
 
-    $Now = (Get-Date).ToUniversalTime() | Get-Date -Format "dd/MM/yyyy hh:mm:ss"
+    $Now = (Get-Date).ToUniversalTime() | Get-Date -Format "dd/MM/yyyy HH:mm:ss"
 
     if ($Version.currentVersion -like "*dep*")
     {
