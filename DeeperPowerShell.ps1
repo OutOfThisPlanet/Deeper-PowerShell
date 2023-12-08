@@ -340,7 +340,7 @@ Function Turn-SharingOff
     Invoke-WebRequest -UseBasicParsing -Uri "$($URI)/sharing/setSharingState"  -ContentType "application/json" -Headers @{"Authorization" = $Token} -Method POST -Body "{`"sharingEnabled`":false}" | Select-Object -ExpandProperty Content | ConvertFrom-Json 
 }
 
-$IPAddress = "192.168.22.199"
+$IPAddress = "192.168.22.199" #Please note that I run my devices in "onearm" mode, to share and mine only, as I do not require the DPN functionality myself.
 $Token = Deeper-Session -IPAddress $IPAddress
 
 Get-Values -IPAddress $IPAddress -Token $Token
