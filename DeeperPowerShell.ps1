@@ -56,7 +56,7 @@ Function Deeper-Session
 
 Function Send-DPR
 {
-    param([string]$IPAddress, [string]$Recepient, [int]$DPRAmount, $Token, [string]$WalletPassword)
+    param([string]$IPAddress, [string]$Recepient, [float]$DPRAmount, $Token, [string]$WalletPassword)
         
     Function Deeper-Wallet
     {
